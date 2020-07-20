@@ -1,54 +1,72 @@
-
+import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtWidgets import QDialog, QApplication
-import sys
 from PyQt5.uic import loadUi
+import pyrebase
 
+firebaseConfig={'apiKey': "AIzaSyD9Bgw0XS4Oj_9viko9Fy3fZ2Wd7W0u72k",
+    'authDomain': "authdemo-16c35.firebaseapp.com",
+    'databaseURL': "https://authdemo-16c35.firebaseio.com",
+    'projectId': "authdemo-16c35",
+    'storageBucket': "authdemo-16c35.appspot.com",
+    'messagingSenderId': "752256979947",
+    'appId': "1:752256979947:web:2f71846c1d795d09db3fae",
+    'measurementId': "G-W4KNLK3307"}
+
+firebase=pyrebase.initialize_app(firebaseConfig)
+
+auth=firebase.auth()
 
 class Login(QDialog):
     def __init__(self):
         super(Login,self).__init__()
         loadUi("login.ui",self)
-        self.clickhere.clicked.connect(self.createAcc)
-        self.login.clicked.connect(self.loginnow)
+        self.loginbutton.clicked.connect(self.loginfunction)
         self.password.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.createaccbutton.clicked.connect(self.gotocreate)
+        self.invalid.setVisible(False)
 
-    def createAcc(self):
-        create=CreateAcc()
-        widget.addWidget(create)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
-
-    def loginnow(self):
+    def loginfunction(self):
         email=self.email.text()
         password=self.password.text()
-        print("Successfully logged in with email: ", email, "and password: ", password)
+        try:
+            auth.sign_in_with_email_and_password(email,password)
+        except:
+            self.invalid.setVisible(True)
+    def gotocreate(self):
+        createacc=CreateAcc()
+        widget.addWidget(createacc)
+        widget.setCurrentIndex(widget.currentIndex()+1)
 
 class CreateAcc(QDialog):
     def __init__(self):
         super(CreateAcc,self).__init__()
         loadUi("createacc.ui",self)
-        self.confirmacc.clicked.connect(self.confirm)
+        self.signupbutton.clicked.connect(self.createaccfunction)
         self.password.setEchoMode(QtWidgets.QLineEdit.Password)
         self.confirmpass.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.invalid.setVisible(False)
 
-    
-    def confirm(self):
-        email=self.email.text()
+    def createaccfunction(self):
+        email = self.email.text()
         if self.password.text()==self.confirmpass.text():
             password=self.password.text()
-            print("Success. New account user: ", email, "password: ",password)
-            self.backtologin()
+            try:
+                auth.create_user_with_email_and_password(email,password)
+                login = Login()
+                widget.addWidget(login)
+                widget.setCurrentIndex(widget.currentIndex() + 1)
+            except:
+                self.invalid.setVisible(True)
 
-    def backtologin(self):
-        login = Login()
-        widget.addWidget(login)
-        widget.setCurrentIndex(widget.currentIndex() + 1)
 
-app = QApplication(sys.argv)
-mainwindow = Login()
-widget = QtWidgets.QStackedWidget()
+
+
+app=QApplication(sys.argv)
+mainwindow=Login()
+widget=QtWidgets.QStackedWidget()
 widget.addWidget(mainwindow)
-widget.setFixedHeight(620)
 widget.setFixedWidth(480)
+widget.setFixedHeight(620)
 widget.show()
 app.exec_()
